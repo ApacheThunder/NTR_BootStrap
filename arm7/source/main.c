@@ -28,10 +28,12 @@ redistribute it freely, subject to the following restrictions:
 
 ---------------------------------------------------------------------------------*/
 #include <nds.h>
+#include <nds/arm7/input.h>
+#include <nds/system.h>
 
 #include <maxmod7.h>
 
-#include "ntrcheck.h"
+#include "fifocheck.h"
 
 //---------------------------------------------------------------------------------
 void VcountHandler() {
@@ -39,28 +41,25 @@ void VcountHandler() {
 	inputGetAndSend();
 }
 
-static void myFIFOValue32Handler(u32 value,void* data)
-{
-  nocashMessage("myFIFOValue32Handler");
-
-  nocashMessage("default");
-  nocashMessage("fifoSendValue32");
-  fifoSendValue32(FIFO_USER_02,*((unsigned int*)value));	
-
+void VblankHandler(void) {
 }
 
 //---------------------------------------------------------------------------------
-int main() {
+int main(void) {
 //---------------------------------------------------------------------------------
+	// Switch to NTR Mode
+	REG_SCFG_ROM = 0x703;
+	REG_SCFG_CLK = 0x0187;
+	REG_SCFG_EXT = 0x93AF0100;
+
 	irqInit();
+	fifoInit();
 
 	// read User Settings from firmware
 	readUserSettings();
 
 	// Start the RTC tracking IRQ
 	initClockIRQ();
-
-	fifoInit();
 
 	mmInstall(FIFO_MAXMOD);
 
@@ -70,19 +69,14 @@ int main() {
 	installSystemFIFO();
 	
 	irqSet(IRQ_VCOUNT, VcountHandler);
+	irqSet(IRQ_VBLANK, VblankHandler);
 
 	irqEnable( IRQ_VBLANK | IRQ_VCOUNT | IRQ_NETWORK);   
 
-	//Card Reset. Enable if needed.
-	//ResetSlot();
-	
-	fifoSetValue32Handler(FIFO_USER_01,myFIFOValue32Handler,0);
+	fifoWaitValue32(FIFO_USER_01);
+	if(fifoCheckValue32(FIFO_USER_02)) { dsi_resetSlot1(); }
+	fifoSendValue32(FIFO_USER_03, 1);
 
-	// Keep the ARM7 mostly idle
-	while (1) {
-	swiWaitForVBlank();
-	// Function checks FIFO value to see if arm9 wants NTR mode set. Refer to ntrcheck.c for how it currently works
-	ntrcheck();
-	}
+	while (1) { swiWaitForVBlank(); fifocheck(); }
 }
 

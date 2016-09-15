@@ -24,8 +24,7 @@ extern "C" {
 #endif
 
 void FadeFX (void);
-void ErrorNoBit31 (void);
-void ErrorNoCard (void);
+void GenericError (void);
 
 #ifdef __cplusplus
 }

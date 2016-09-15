@@ -24,14 +24,6 @@ THE SOFTWARE.
 
 ---------------------------------------------------------------------------------*/
 
-
-
-
-
-
-
-
-
 #include "stringtool.h"
 #include <cstdarg>
 #include <cstdio>
@@ -50,3 +42,4 @@ std::string formatString( const char* fmt, ... )
     va_end(argList);
     return str;
 }
+

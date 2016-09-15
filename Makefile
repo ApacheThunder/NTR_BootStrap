@@ -9,8 +9,8 @@ endif
 
 include $(DEVKITARM)/ds_rules
 
-export HBMENU_MAJOR	:= 0
-export HBMENU_MINOR	:= 5
+export HBMENU_MAJOR	:= 1
+export HBMENU_MINOR	:= 0
 export HBMENU_PATCH	:= 0
 
 
@@ -23,7 +23,7 @@ VERSION	:=	$(HBMENU_MAJOR).$(HBMENU_MINOR).$(HBMENU_PATCH)
 # DATA is a list of directories containing binary files embedded using bin2o
 # GRAPHICS is a list of directories containing image files to be converted with grit
 #---------------------------------------------------------------------------------
-TARGET		:=	nds-bootstrap
+TARGET		:=	ntr_bootstrap
 BUILD		:=	build
 SOURCES		:=	source
 INCLUDES	:=	include
@@ -117,7 +117,8 @@ export GAME_TITLE := $(TARGET)
 
 .PHONY: bootloader bootstub BootStrap clean
 
-all:	bootloader bootstub $(TARGET).nds
+all:	bootloader bootstub $(TARGET).nds 
+	@build_cia.bat
 
 dist:	all
 	@rm	-fr	hbmenu
@@ -127,7 +128,7 @@ dist:	all
 	@tar -cvjf hbmenu-$(VERSION).tar.bz2 hbmenu testfiles README.md COPYING -X exclude.lst
 	
 $(TARGET).nds:	$(TARGET).arm7 $(TARGET).arm9
-	ndstool	-c $(TARGET).nds -7 $(TARGET).arm7.elf -9 $(TARGET).arm9.elf -b icon.bmp "NDS BOOTSTRAP;Runs an .ds file;made by devkitpro"
+	ndstool	-c $(TARGET).nds -7 $(TARGET).arm7.elf -9 $(TARGET).arm9.elf -b icon.bmp "NDS BOOTSTRAP;Runs an .nds file;made by devkitpro"
 
 $(TARGET).arm7: arm7/$(TARGET).elf
 	cp arm7/$(TARGET).elf $(TARGET).arm7.elf
@@ -151,9 +152,7 @@ arm9/$(TARGET).elf:
 #---------------------------------------------------------------------------------
 clean:
 	@echo clean ...
-	@rm -fr $(BUILD) $(TARGET).elf $(TARGET).nds $(TARGET).arm9 data
-	@rm -fr nds-bootstrap.arm7.elf
-	@rm -fr nds-bootstrap.arm9.elf
+	@rm -fr $(BUILD) $(TARGET).elf $(TARGET).nds $(TARGET).arm9 $(TARGET).arm7.elf $(TARGET).arm9.elf data
 	@$(MAKE) -C bootloader clean
 	@$(MAKE) -C bootstub clean
 	$(MAKE) -C arm9 clean

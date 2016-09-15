@@ -64,3 +64,4 @@ class CIniFile
 };
 
 #endif // _INIFILE_H_
+

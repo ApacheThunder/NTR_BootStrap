@@ -22,17 +22,7 @@
 #include "soundbank.h"
 #include "soundbank_bin.h"
  
-#include "bootsplash.h"
-// #include "errorsplash.h"
-
 #include "bios_decompress_callback.h"
-
-/*
-#include "CartPrompt01.h"
-#include "CartPrompt02.h"
-#include "CartPrompt03.h"
-#include "CartPrompt04.h"
-*/
 
 #include "Bot00.h"
 #include "Bot01.h"
@@ -105,6 +95,8 @@
 #include "DSi35.h"
 #include "DSi36.h"
 
+#include "bootsplash.h"
+
 #define CONSOLE_SCREEN_WIDTH 32
 #define CONSOLE_SCREEN_HEIGHT 24
 
@@ -150,57 +142,6 @@ void BootJingleDSi() {
 	
 	mmEffectEx(&dsiboot);
 }
-
-/*
-void CartridgePrompt() {
-	
-	swiDecompressLZSSVram ((void*)Bot05Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
-	vramcpy_ui (&BG_PALETTE_SUB[0], Bot05Pal, Bot05PalLen);
-
-	for (int i = 0; i < 20; i++) { swiWaitForVBlank(); }
-	
-	swiDecompressLZSSVram ((void*)CartPrompt04Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
-	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt04Pal, CartPrompt04PalLen);
-
-	for (int i = 0; i < 4; i++) { swiWaitForVBlank(); }
-
-	swiDecompressLZSSVram ((void*)CartPrompt03Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
-	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt03Pal, CartPrompt03PalLen);
-
-	for (int i = 0; i < 4; i++) { swiWaitForVBlank(); }
-
-	swiDecompressLZSSVram ((void*)CartPrompt02Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
-	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt02Pal, CartPrompt02PalLen);	
-
-	for (int i = 0; i < 4; i++) { swiWaitForVBlank(); }
-
-	swiDecompressLZSSVram ((void*)CartPrompt01Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
-	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt01Pal, CartPrompt01PalLen);	
-
-	for (int i = 0; i < 40; i++) { swiWaitForVBlank(); }
-
-	swiDecompressLZSSVram ((void*)CartPrompt02Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
-	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt02Pal, CartPrompt02PalLen);	
-
-	for (int i = 0; i < 4; i++) { swiWaitForVBlank(); }
-
-	swiDecompressLZSSVram ((void*)CartPrompt03Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
-	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt03Pal, CartPrompt03PalLen);
-
-	for (int i = 0; i < 4; i++) { swiWaitForVBlank(); }
-
-	swiDecompressLZSSVram ((void*)CartPrompt04Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
-	vramcpy_ui (&BG_PALETTE_SUB[0], CartPrompt04Pal, CartPrompt04PalLen);
-
-	for (int i = 0; i < 4; i++) { swiWaitForVBlank(); }
-
-	swiDecompressLZSSVram ((void*)Bot05Tiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
-	vramcpy_ui (&BG_PALETTE_SUB[0], Bot05Pal, Bot05PalLen);
-
-	for (int i = 0; i < 20; i++) { swiWaitForVBlank(); }
-
-}
-*/
 
 void BootSplashDSi() {
 
@@ -272,14 +213,6 @@ void BootSplashDSi() {
 	swiDecompressLZSSVram ((void*)DSi31Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
 	vramcpy_ui (&BG_PALETTE[0], DSi31Pal, DSi31PalLen);
 
-	/*
-	// Display Cartridge Prompt animation until cartridge inserted. (skipped if one already inserted)
-	if(REG_SCFG_MC == 0x11) { 
-		do { CartridgePrompt(); } 
-		while (REG_SCFG_MC == 0x11);
-	}
-	*/
-
 	// Pause on frame 31 for a second		
 	for (int i = 0; i < 80; i++) { swiWaitForVBlank(); }
 	
@@ -320,11 +253,9 @@ void BootSplashDSi() {
 
 	swiDecompressLZSSVram ((void*)Top37Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
 	vramcpy_ui (&BG_PALETTE[0], Top37Pal, Top37PalLen);
-
-	// if(REG_SCFG_MC == 0x11) { ErrorNoCard(); }
 }
 
-void BootSplashDS(){
+void BootSplashDS(bool SetNTRSplash) {
 
 	// offsetting palletes by one frame during the fade in seems to fix black flicker at start.	
 	// only did this for about 5 frames. (time it takes for bottom screen to fade in)
@@ -384,9 +315,7 @@ void BootSplashDS(){
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 
-	// Once frame 8 is reached boot jingle sound effect plays
-	// if ( pressed & KEY_A ) { BootJingleDSi(); } else { BootJingle(); }
-	BootJingleDSi();
+	if( SetNTRSplash ) { BootJingle(); } else { BootJingleDSi(); }
 	
 	swiDecompressLZSSVram ((void*)Top06Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
 	vramcpy_ui (&BG_PALETTE[0], Top06Pal, Top06PalLen);
@@ -448,11 +377,7 @@ void BootSplashDS(){
 
 	for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 
-	BootSplashDSi();
-	/*
-	if ( pressed & KEY_A ) { BootSplashDSi(); } else {
-		
-		fifoSendValue32(FIFO_USER_04, 1);
+	if( SetNTRSplash ) {
 		
 		swiDecompressLZSSVram ((void*)Top18Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
 		vramcpy_ui (&BG_PALETTE[0], Top18Pal, Top18PalLen);
@@ -522,14 +447,6 @@ void BootSplashDS(){
 		swiDecompressLZSSVram ((void*)Top31Tiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
 		vramcpy_ui (&BG_PALETTE[0], Top31Pal, Top31PalLen);
 
-
-		// Display Cartridge Prompt animation until cartridge inserted. (skipped if one already inserted)
-		if(REG_SCFG_MC == 0x11) { 
-			do { CartridgePrompt(); } 
-			while (REG_SCFG_MC == 0x11);
-		}
-		
-
 		// Pause on frame 31 for a second		
 		for (int i = 0; i < 80; i++) { swiWaitForVBlank(); }
 
@@ -573,26 +490,14 @@ void BootSplashDS(){
 
 		for (int i = 0; i < 2; i++) { swiWaitForVBlank(); }
 		
-		swiWaitForVBlank();
-
-		if(REG_SCFG_MC == 0x11) { ErrorNoCard(); }
-
-		// Set NTR mode clock speeds. DSi Mode Splash will leave this untouched.
-		REG_SCFG_CLK = 0x80;
-		
-		swiWaitForVBlank();
-	}
-	*/
+		} else { BootSplashDSi(); }
 }
 
-void BootSplashInit() {
+void BootSplashInit(bool UseNTRSplash) {
 	
-	// Set TWL Clock speeds to ensure bootsplash plays smoothly. SCFG_CLK will be set back to what it was before when it's done.
-	int backup = REG_SCFG_CLK;
-	// REG_SCFG_CLK = 0x85;
-	REG_SCFG_CLK |= 1;
+	bool SetNTRSplash = false;
 	
-	swiWaitForVBlank();
+	if( UseNTRSplash ) { SetNTRSplash = true; }
 
 	videoSetMode(MODE_0_2D | DISPLAY_BG0_ACTIVE);
 	videoSetModeSub(MODE_0_2D | DISPLAY_BG0_ACTIVE);
@@ -609,8 +514,7 @@ void BootSplashInit() {
 		bgMapSub[i] = (u16)i;
 	}
 	
-	BootSplashDS();
-	
-	REG_SCFG_CLK = backup;
+	BootSplashDS(SetNTRSplash);
+
 }
 

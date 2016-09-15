@@ -2,21 +2,17 @@
  Copyright (C) 2005 - 2010
 	Michael "Chishm" Chisholm
 	Dave "WinterMute" Murphy
-
  This program is free software; you can redistribute it and/or
  modify it under the terms of the GNU General Public License
  as published by the Free Software Foundation; either version 2
  of the License, or (at your option) any later version.
-
  This program is distributed in the hope that it will be useful,
  but WITHOUT ANY WARRANTY; without even the implied warranty of
  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  GNU General Public License for more details.
-
  You should have received a copy of the GNU General Public License
  along with this program; if not, write to the Free Software
  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
-
 ------------------------------------------------------------------*/
 #include <string.h>
 #include <nds.h>
@@ -26,6 +22,8 @@
 
 #include <unistd.h>
 #include <fat.h>
+
+#include "inifile.h"
 
 #include "load_bin.h"
 
@@ -269,6 +267,15 @@ int runNds (const void* loader, u32 loaderSize, u32 cluster, bool initDisc, bool
 	u16 argTempVal = 0;
 	int argSize;
 	const char* argChar;
+	
+	CIniFile bootstrapini( "sd:/nds/ntr_bootstrap.ini" );
+
+	if(bootstrapini.GetInt("NTR-BOOTSTRAP","LOCKSCFG",0) == 1) { REG_SCFG_EXT = 0x03000000; }
+
+	// Tell Arm7 to make requested SCFG changes
+	fifoSendValue32(FIFO_USER_06, 1);
+	// Wait for arm7 to finish SCFG changes
+	fifoWaitValue32(FIFO_USER_07);
 
 	irqDisable(IRQ_ALL);
 
@@ -336,6 +343,7 @@ int runNds (const void* loader, u32 loaderSize, u32 cluster, bool initDisc, bool
 
 	// Give the VRAM to the ARM7
 	VRAM_C_CR = VRAM_ENABLE | VRAM_C_ARM7_0x06000000;	
+
 	// Reset into a passme loop
 	REG_EXMEMCNT |= ARM7_OWNS_ROM | ARM7_OWNS_CARD;
 	*((vu32*)0x02FFFFFC) = 0;

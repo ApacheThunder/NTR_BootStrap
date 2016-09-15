@@ -15,7 +15,7 @@ include $(DEVKITARM)/ds_rules
 # INCLUDES is a list of directories containing extra header files
 # MAXMOD_SOUNDBANK contains a directory of music and sound effect files
 #---------------------------------------------------------------------------------
-TARGET		:=	nds-bootstrap
+TARGET		:=	ntr_bootstrap
 BUILD		:=	build
 SOURCES		:=	source
 INCLUDES	:=	include
@@ -35,7 +35,7 @@ CFLAGS	:=	-g -Wall -O2\
 		$(ARCH)
 
 CFLAGS	+=	$(INCLUDE) -DARM9
-CXXFLAGS	:= $(CFLAGS) -fno-exceptions
+CXXFLAGS	:= $(CFLAGS) -fno-rtti -fno-exceptions
 
 ASFLAGS	:=	-g $(ARCH)
 LDFLAGS	=	-specs=ds_arm9.specs -g $(ARCH) -Wl,-Map,$(notdir $*.map)
@@ -133,18 +133,6 @@ $(OUTPUT).elf	:	$(OFILES)
 #---------------------------------------------------------------------------------
 # graphics
 #---------------------------------------------------------------------------------
-#Cartridge Wait Prompt (bottom screen)
-CartPrompt01.s			:	../$(IMAGES)/CartPrompt01.bmp
-	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
-
-CartPrompt02.s			:	../$(IMAGES)/CartPrompt02.bmp
-	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
-
-CartPrompt03.s			:	../$(IMAGES)/CartPrompt03.bmp
-	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
-
-CartPrompt04.s			:	../$(IMAGES)/CartPrompt04.bmp
-	grit	$< -gB8 -gzl -fts -gTff00ff -o $@ -q
 
 # generic fade from white to black
 fade00.s			:	../$(IMAGES)/fade00.bmp
@@ -182,50 +170,6 @@ suberror05.s			:	../$(IMAGES)/suberror05.bmp
 	grit	$< -gB8 -gzl -gTff00ff -fts -o $@ -q
 
 suberror06.s			:	../$(IMAGES)/suberror06.bmp
-	grit	$< -gB8 -gzl -gTff00ff -fts -o $@ -q
-
-# No bit31 patch error
-toperror1_00.s			:	../$(IMAGES)/toperror1_00.bmp
-	grit	$< -gB8 -gzl -gTff00ff -fts -o $@ -q
-
-toperror1_01.s			:	../$(IMAGES)/toperror1_01.bmp
-	grit	$< -gB8 -gzl -gTff00ff -fts -o $@ -q
-
-toperror1_02.s			:	../$(IMAGES)/toperror1_02.bmp
-	grit	$< -gB8 -gzl -gTff00ff -fts -o $@ -q
-
-toperror1_03.s			:	../$(IMAGES)/toperror1_03.bmp
-	grit	$< -gB8 -gzl -gTff00ff -fts -o $@ -q
-
-toperror1_04.s			:	../$(IMAGES)/toperror1_04.bmp
-	grit	$< -gB8 -gzl -gTff00ff -fts -o $@ -q
-
-toperror1_05.s			:	../$(IMAGES)/toperror1_05.bmp
-	grit	$< -gB8 -gzl -gTff00ff -fts -o $@ -q
-
-toperror1_06.s			:	../$(IMAGES)/toperror1_06.bmp
-	grit	$< -gB8 -gzl -gTff00ff -fts -o $@ -q
-
-# No Cartridge Error
-toperror2_00.s			:	../$(IMAGES)/toperror2_00.bmp
-	grit	$< -gB8 -gzl -gTff00ff -fts -o $@ -q
-
-toperror2_01.s			:	../$(IMAGES)/toperror2_01.bmp
-	grit	$< -gB8 -gzl -gTff00ff -fts -o $@ -q
-
-toperror2_02.s			:	../$(IMAGES)/toperror2_02.bmp
-	grit	$< -gB8 -gzl -gTff00ff -fts -o $@ -q
-
-toperror2_03.s			:	../$(IMAGES)/toperror2_03.bmp
-	grit	$< -gB8 -gzl -gTff00ff -fts -o $@ -q
-
-toperror2_04.s			:	../$(IMAGES)/toperror2_04.bmp
-	grit	$< -gB8 -gzl -gTff00ff -fts -o $@ -q
-
-toperror2_05.s			:	../$(IMAGES)/toperror2_05.bmp
-	grit	$< -gB8 -gzl -gTff00ff -fts -o $@ -q
-
-toperror2_06.s			:	../$(IMAGES)/toperror2_06.bmp
 	grit	$< -gB8 -gzl -gTff00ff -fts -o $@ -q
 
 # Main Boot Splash sequence
