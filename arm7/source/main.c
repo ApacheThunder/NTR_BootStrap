@@ -49,8 +49,7 @@ int main(void) {
 //---------------------------------------------------------------------------------
 	// Switch to NTR Mode
 	REG_SCFG_ROM = 0x703;
-	REG_SCFG_CLK = 0x0187;
-	REG_SCFG_EXT = 0x93AF0100;
+	REG_SCFG_EXT = 0x93A40000;
 
 	irqInit();
 	fifoInit();
