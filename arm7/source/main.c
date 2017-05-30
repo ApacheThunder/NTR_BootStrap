@@ -33,6 +33,7 @@ redistribute it freely, subject to the following restrictions:
 
 #include <maxmod7.h>
 
+#include "resetslot.h"
 #include "fifocheck.h"
 
 //---------------------------------------------------------------------------------
@@ -44,12 +45,15 @@ void VcountHandler() {
 void VblankHandler(void) {
 }
 
+#define REG_SCFG_ROM	(*(vu32*)0x4004000)
+// #define REG_SCFG_EXT	(*(vu32*)0x4004008)
+
 //---------------------------------------------------------------------------------
 int main(void) {
 //---------------------------------------------------------------------------------
 	// Switch to NTR Mode
 	REG_SCFG_ROM = 0x703;
-	REG_SCFG_EXT = 0x93A40000;
+	// REG_SCFG_EXT = 0x93A40000;
 
 	irqInit();
 	fifoInit();
@@ -73,7 +77,7 @@ int main(void) {
 	irqEnable( IRQ_VBLANK | IRQ_VCOUNT | IRQ_NETWORK);   
 
 	fifoWaitValue32(FIFO_USER_01);
-	if(fifoCheckValue32(FIFO_USER_02)) { dsi_resetSlot1(); }
+	if(fifoCheckValue32(FIFO_USER_02)) { TWL_ResetSlot1(); }
 	fifoSendValue32(FIFO_USER_03, 1);
 
 	while (1) { swiWaitForVBlank(); fifocheck(); }

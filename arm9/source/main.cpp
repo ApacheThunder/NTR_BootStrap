@@ -67,6 +67,10 @@ void runFile(string filename) {
 	}
 }
 
+#define REG_SCFG_CLK	(*(vu32*)0x4004004)
+#define REG_SCFG_EXT	(*(vu32*)0x4004008)
+#define REG_SCFG_MC		(*(vu32*)0x4004010)
+
 int main(int argc, char **argv) {
 
 	REG_SCFG_CLK = 0x85;

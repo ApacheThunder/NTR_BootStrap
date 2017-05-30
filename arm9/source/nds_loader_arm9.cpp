@@ -74,6 +74,8 @@ typedef unsigned char data_t;
 #define FIX_GOT	0x04
 #define FIX_BSS	0x08
 
+#define REG_SCFG_EXT	(*(vu32*)0x4004008)
+
 enum DldiOffsets {
 	DO_magicString = 0x00,			// "\xED\xA5\x8D\xBF Chishm"
 	DO_magicToken = 0x00,			// 0xBF8DA5ED
