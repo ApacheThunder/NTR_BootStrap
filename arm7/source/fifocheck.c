@@ -1,15 +1,162 @@
 #include <nds.h>
 
-#define REG_SCFG_CLK	(*(vu32*)0x4004004)
-#define REG_SCFG_EXT	(*(vu32*)0x4004008)
+// #define REG_SCFG_CLK	(*(vu32*)0x4004004)
+// #define REG_SCFG_EXT	(*(vu32*)0x4004008)
+
+void NDSTouchscreenMode() {
+
+	u8 volLevel;
+	
+	volLevel = 0xA7;
+
+	volLevel += 0x13;
+
+	readTSCReg(0);
+	writeTSCReg(0,0);
+	writeTSCReg(0x3a,0);
+	readTSCReg(0x51);
+	writeTSCReg(3,0);
+	readTSCReg(2);
+	writeTSCReg(0,0);
+	readTSCReg(0x3f);
+	writeTSCReg(0,1);
+	readTSCReg(0x38);
+	readTSCReg(0x2a);
+	readTSCReg(0x2E);
+	writeTSCReg(0,0);
+	writeTSCReg(0x52,0x80);
+	writeTSCReg(0x40,0xC);
+	writeTSCReg(0,1);
+	writeTSCReg(0x24,0xff);
+	writeTSCReg(0x25,0xff);
+	writeTSCReg(0x26,0x7f);
+	writeTSCReg(0x27,0x7f);
+	writeTSCReg(0x28,0x4a);
+	writeTSCReg(0x29,0x4a);
+	writeTSCReg(0x2a,0x10);
+	writeTSCReg(0x2b,0x10);
+	writeTSCReg(0,0);
+	writeTSCReg(0x51,0);
+	writeTSCReg(0,3);
+	readTSCReg(2);
+	writeTSCReg(2,0x98);
+	writeTSCReg(0,1);
+	writeTSCReg(0x23,0);
+	writeTSCReg(0x1f,0x14);
+	writeTSCReg(0x20,0x14);
+	writeTSCReg(0,0);
+	writeTSCReg(0x3f,0);
+	readTSCReg(0x0b);
+	writeTSCReg(0x5,0);
+	writeTSCReg(0xb,0x1);
+	writeTSCReg(0xc,0x2);
+	writeTSCReg(0x12,0x1);
+	writeTSCReg(0x13,0x2);
+	writeTSCReg(0,1);
+	writeTSCReg(0x2E,0x00);
+	writeTSCReg(0,0);
+	writeTSCReg(0x3A,0x60);
+	writeTSCReg(0x01,01);
+	writeTSCReg(0x9,0x66);
+	writeTSCReg(0,1);
+	readTSCReg(0x20);
+	writeTSCReg(0x20,0x10);
+	writeTSCReg(0,0);
+	writeTSCReg( 04,00);
+	writeTSCReg( 0x12,0x81);
+	writeTSCReg( 0x13,0x82);
+	writeTSCReg( 0x51,0x82);
+	writeTSCReg( 0x51,0x00);
+	writeTSCReg( 0x04,0x03);
+	writeTSCReg( 0x05,0xA1);
+	writeTSCReg( 0x06,0x15);
+	writeTSCReg( 0x0B,0x87);
+	writeTSCReg( 0x0C,0x83);
+	writeTSCReg( 0x12,0x87);
+	writeTSCReg( 0x13,0x83);
+	writeTSCReg(0,3);
+	readTSCReg(0x10);
+	writeTSCReg(0x10,0x08);
+	writeTSCReg(0,4);
+	writeTSCReg(0x08,0x7F);
+	writeTSCReg(0x09,0xE1);
+	writeTSCReg(0xa,0x80);
+	writeTSCReg(0xb,0x1F);
+	writeTSCReg(0xc,0x7F);
+	writeTSCReg(0xd,0xC1);
+	writeTSCReg(0,0);
+	writeTSCReg( 0x41, 0x08);
+	writeTSCReg( 0x42, 0x08);
+	writeTSCReg( 0x3A, 0x00);
+	writeTSCReg(0,4);
+	writeTSCReg(0x08,0x7F);
+	writeTSCReg(0x09,0xE1);
+	writeTSCReg(0xa,0x80);
+	writeTSCReg(0xb,0x1F);
+	writeTSCReg(0xc,0x7F);
+	writeTSCReg(0xd,0xC1);
+	writeTSCReg(0,1);
+	writeTSCReg(0x2F, 0x2B);
+	writeTSCReg(0x30, 0x40);
+	writeTSCReg(0x31, 0x40);
+	writeTSCReg(0x32, 0x60);
+	writeTSCReg(0,0);
+	readTSCReg( 0x74);
+	writeTSCReg( 0x74, 0x02);
+	readTSCReg( 0x74);
+	writeTSCReg( 0x74, 0x10);
+	readTSCReg( 0x74);
+	writeTSCReg( 0x74, 0x40);
+	writeTSCReg(0,1);
+	writeTSCReg( 0x21, 0x20);
+	writeTSCReg( 0x22, 0xF0);
+	writeTSCReg(0,0);
+	readTSCReg( 0x51);
+	readTSCReg( 0x3f);
+	writeTSCReg( 0x3f, 0xd4);
+	writeTSCReg(0,1);
+	writeTSCReg(0x23,0x44);
+	writeTSCReg(0x1F,0xD4);
+	writeTSCReg(0x28,0x4e);
+	writeTSCReg(0x29,0x4e);
+	writeTSCReg(0x24,0x9e);
+	writeTSCReg(0x24,0x9e);
+	writeTSCReg(0x20,0xD4);
+	writeTSCReg(0x2a,0x14);
+	writeTSCReg(0x2b,0x14);
+	writeTSCReg(0x26,volLevel);
+	writeTSCReg(0x27,volLevel);
+	writeTSCReg(0,0);
+	writeTSCReg(0x40,0);
+	writeTSCReg(0x3a,0x60);
+	writeTSCReg(0,1);
+	writeTSCReg(0x26,volLevel);
+	writeTSCReg(0x27,volLevel);
+	writeTSCReg(0x2e,0x03);
+	writeTSCReg(0,3);
+	writeTSCReg(3,0);
+	writeTSCReg(0,1);
+	writeTSCReg(0x21,0x20);
+	writeTSCReg(0x22,0xF0);
+	readTSCReg(0x22);
+	writeTSCReg(0x22,0xF0);
+	writeTSCReg(0,0);
+	writeTSCReg(0x52,0x80);
+	writeTSCReg(0x51,0x00);
+	writeTSCReg(0,3);
+	readTSCReg(0x02);
+	writeTSCReg(2,0x98);
+	writeTSCReg(0,0xff);
+	writeTSCReg(5,0);
+
+	writePowerManagement(0x00,0x0D);
+
+}
 
 void fifocheck (void) {
-	if(fifoCheckValue32(FIFO_USER_06)) {
-		if(fifoCheckValue32(FIFO_USER_04)) { REG_SCFG_CLK = 0x0181; }
-		if(fifoCheckValue32(FIFO_USER_05)) { REG_SCFG_EXT = 0x13A50000; } else { REG_SCFG_EXT = 0x93A53000; }
-		// Tell arm9 it has finished
-		fifoSendValue32(FIFO_USER_07, 1);
-		fifoSendValue32(FIFO_USER_06, 0);
+	if(fifoCheckValue32(FIFO_USER_04)) {
+		if(fifoCheckValue32(FIFO_USER_05)) { NDSTouchscreenMode(); }
+		fifoSendValue32(FIFO_USER_04, 0);
 	}
 }
 

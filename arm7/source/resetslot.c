@@ -1,7 +1,5 @@
 #include <nds.h>
 
-#define REG_SCFG_MC		(*(vu32*)0x4004010)
-
 int PowerOnSlot() {
     REG_SCFG_MC = 0x04;    // set state=1
     while(REG_SCFG_MC&1);

@@ -27,104 +27,114 @@
 
 #include <nds/fifocommon.h>
 
-#include "nds_loader_arm9.h"
 #include "inifile.h"
-#include "bootsplash.h"
-#include "errorsplash.h"
+#include "nds_loader_arm9.h"
 
-using namespace std;
+#include "bios_decompress_callback.h"
 
-void runFile(string filename) {
-	vector<char*> argarray;
+#include "topLoad.h"
+#include "subLoad.h"
+#include "topError.h"
+#include "subError.h"
+#include "subPrompt.h"
 
-	if ( strcasecmp (filename.c_str() + filename.size() - 5, ".argv") == 0) {
-		FILE *argfile = fopen(filename.c_str(),"rb");
-		char str[PATH_MAX], *pstr;
-		const char seps[]= "\n\r\t ";
+#define CONSOLE_SCREEN_WIDTH 32
+#define CONSOLE_SCREEN_HEIGHT 24
 
-		while( fgets(str, PATH_MAX, argfile) ) {
-			// Find comment and end string there
-			if( (pstr = strchr(str, '#')) )
-				*pstr= '\0';
-
-			// Tokenize arguments
-			pstr= strtok(str, seps);
-
-			while( pstr != NULL ) {
-				argarray.push_back(strdup(pstr));
-				pstr= strtok(NULL, seps);
-			}
-		}
-		fclose(argfile);
-		filename = argarray.at(0);
-	} else {
-		argarray.push_back(strdup(filename.c_str()));
-	}
-
-	if ( strcasecmp (filename.c_str() + filename.size() - 4, ".nds") != 0 || argarray.size() == 0 ) {
-	} else {
-		int err = runNdsFile (argarray[0], argarray.size(), (const char **)&argarray[0]);
+void vramcpy_ui (void* dest, const void* src, int size) 
+{
+	u16* destination = (u16*)dest;
+	u16* source = (u16*)src;
+	while (size > 0) {
+		*destination++ = *source++;
+		size-=2;
 	}
 }
 
-#define REG_SCFG_CLK	(*(vu32*)0x4004004)
-#define REG_SCFG_EXT	(*(vu32*)0x4004008)
-#define REG_SCFG_MC		(*(vu32*)0x4004010)
+void BootSplashInit() {
 
-int main(int argc, char **argv) {
+	videoSetMode(MODE_0_2D | DISPLAY_BG0_ACTIVE);
+	videoSetModeSub(MODE_0_2D | DISPLAY_BG0_ACTIVE);
+	vramSetBankA (VRAM_A_MAIN_BG_0x06000000);
+	vramSetBankC (VRAM_C_SUB_BG_0x06200000);
+	REG_BG0CNT = BG_MAP_BASE(0) | BG_COLOR_256 | BG_TILE_BASE(2);
+	REG_BG0CNT_SUB = BG_MAP_BASE(0) | BG_COLOR_256 | BG_TILE_BASE(2);
+	BG_PALETTE[0]=0;
+	BG_PALETTE[255]=0xffff;
+	u16* bgMapTop = (u16*)SCREEN_BASE_BLOCK(0);
+	u16* bgMapSub = (u16*)SCREEN_BASE_BLOCK_SUB(0);
+	for (int i = 0; i < CONSOLE_SCREEN_WIDTH*CONSOLE_SCREEN_HEIGHT; i++) {
+		bgMapTop[i] = (u16)i;
+		bgMapSub[i] = (u16)i;
+	}
 
-	REG_SCFG_CLK = 0x85;
+}
+
+void LoadScreen() {
+
+		// Display Load Screen
+		swiDecompressLZSSVram ((void*)topLoadTiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
+		swiDecompressLZSSVram ((void*)subLoadTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+		vramcpy_ui (&BG_PALETTE[0], topLoadPal, topLoadPalLen);
+		vramcpy_ui (&BG_PALETTE_SUB[0], subLoadPal, subLoadPalLen);
+
+}
+
+void CartridgePrompt() {
+
+	// Display Load Screen
+	swiDecompressLZSSVram ((void*)topLoadTiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
+	swiDecompressLZSSVram ((void*)subPromptTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+	vramcpy_ui (&BG_PALETTE[0], topLoadPal, topLoadPalLen);
+	vramcpy_ui (&BG_PALETTE_SUB[0], subPromptPal, subPromptPalLen);
 	
-	bool UseNTRSplash = true;
-	bool TriggerExit = false;
-	
+	for (int i = 0; i < 20; i++) { swiWaitForVBlank(); }
+
+}
+
+int main( int argc, char **argv) {
+
+	defaultExceptionHandler();
+
+	BootSplashInit();
+
 	if (fatInitDefault()) {
-
-		CIniFile bootstrapini( "sd:/nds/ntr_bootstrap.ini" );
-
-		std::string	ndsPath = bootstrapini.GetString( "NTR-BOOTSTRAP", "NDS", "");
-
-		if(bootstrapini.GetInt("NTR-BOOTSTRAP","NTRCLOCK",0) == 0) { UseNTRSplash = false; }
-
-		if(bootstrapini.GetInt("NTR-BOOTSTRAP","DISABLEANIMATION",0) == 0) { BootSplashInit(UseNTRSplash); }
-
-		if(bootstrapini.GetInt("NTR-BOOTSTRAP","NTRCLOCK",0) == 1) {
-		REG_SCFG_CLK = 0x80;
-		fifoSendValue32(FIFO_USER_04, 1);
-		}
-
-		if(bootstrapini.GetInt("NTR-BOOTSTRAP","RESETSLOT1",0) == 1) {
-			if(REG_SCFG_MC == 0x11) { 
-				consoleDemoInit();
-				printf("Please insert a cartridge...\n");
-				do { swiWaitForVBlank(); } 
+		
+		LoadScreen();
+		
+		CIniFile NTRBootstrap( "sd:/nds/NTR_Bootstrap.ini" );
+		
+		std::string	ndsPath = NTRBootstrap.GetString( "NTR_BOOTSTRAP", "NDS", "");
+		
+		if(NTRBootstrap.GetInt("NTR_BOOTSTRAP","RESETSLOT1",0) == 0) {
+			fifoSendValue32(FIFO_USER_01, 1);
+		} else {
+			if (REG_SCFG_MC == 0x11) {
+				do { CartridgePrompt(); }
 				while (REG_SCFG_MC == 0x11);
 			}
+			LoadScreen();
 			fifoSendValue32(FIFO_USER_02, 1);
+			fifoSendValue32(FIFO_USER_01, 1);
+			fifoWaitValue32(FIFO_USER_03);
 		}
+		
+		for (int i = 0; i < 60; i++) { swiWaitForVBlank(); }
+		
+		if(NTRBootstrap.GetInt("NTR_BOOTSTRAP","NTRTOUCH",0) == 0) { /* Do Nothing */ } else { fifoSendValue32(FIFO_USER_05, 1); }
+		
+		fifoSendValue32(FIFO_USER_04, 1);
+		
+		for (int i = 0; i < 60; i++) { swiWaitForVBlank(); }
 
-		fifoSendValue32(FIFO_USER_01, 1);
-		fifoWaitValue32(FIFO_USER_03);
-		for (int i = 0; i < 20; i++) { swiWaitForVBlank(); }
-
-		if(bootstrapini.GetInt("NTR-BOOTSTRAP","LOCKSCFG",0) == 1) {
-			fifoSendValue32(FIFO_USER_05, 1); 
-		} else {
-			// REG_SCFG_EXT = 0x8307F100;
-			REG_SCFG_EXT = 0x83000000;
-		}
-
-		runFile(ndsPath.c_str());
+		runNdsFile(ndsPath.c_str(), 0, NULL);
 	} else {
-		if( REG_SCFG_CLK = 0x80 ) { REG_SCFG_CLK = 0x85; }
-		GenericError();
-		TriggerExit = true;
-	}
-	
-	while(1) { 
-		swiWaitForVBlank(); 
-		if(TriggerExit) { break; }
-	}
-	return 0;
+		// Display Error Screen
+		swiDecompressLZSSVram ((void*)topErrorTiles, (void*)CHAR_BASE_BLOCK(2), 0, &decompressBiosCallback);
+		swiDecompressLZSSVram ((void*)subErrorTiles, (void*)CHAR_BASE_BLOCK_SUB(2), 0, &decompressBiosCallback);
+		vramcpy_ui (&BG_PALETTE[0], topErrorPal, topErrorPalLen);
+		vramcpy_ui (&BG_PALETTE_SUB[0], subErrorPal, subErrorPalLen);
+		}
+	while(1) { swiWaitForVBlank(); }
 }
 
