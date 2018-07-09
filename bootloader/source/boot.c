@@ -76,6 +76,7 @@ extern unsigned long argSize;
 extern unsigned long dsiSD;
 extern unsigned long dsiMode;
 
+/*
 #ifdef NTRMODE
 void initMBKArm7() {
 	// REG_MBK6=0x09403900;
@@ -84,6 +85,7 @@ void initMBKArm7() {
 	REG_MBK9=0xFCFFFF0F;
 }
 #endif
+*/
 
 //++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 // Firmware stuff
@@ -290,9 +292,9 @@ void startBinary_ARM7 (void) {
 
 #ifdef NTRMODE
 	REG_SCFG_ROM = 0x703;
-	// REG_SCFG_CLK = 0x0181;
 	REG_SCFG_CLK = 0x0180;
 	REG_SCFG_EXT = 0x12A03000;
+	// REG_SCFG_CLK = 0x0181;
 	// REG_SCFG_EXT = 0x13A50000;
 	// REG_SCFG_EXT = 0x93A53000;
 	dsiMode = false;
@@ -322,10 +324,6 @@ void mpu_reset();
 void mpu_reset_end();
 
 int main (void) {
-
-#ifdef NTRMODE
-	initMBKArm7();
-#endif
 
 #ifdef NO_DLDI
 	dsiSD = true;
@@ -372,6 +370,18 @@ int main (void) {
 	// Get ARM7 to clear RAM
 	resetMemory_ARM7();	
 	
+	/*
+	#ifdef NTRMODE
+	initMBKArm7();
+
+	// Have arm9 setup Arm9 MBK registers
+	copyLoop((void*)TEMP_MEM, (void*)initMBK_ARM9, initMBK_ARM9_size);
+	(*(vu32*)0x02FFFE24) = (u32)TEMP_MEM;
+	while ((*(vu32*)0x02FFFE24) == (u32)TEMP_MEM);
+	
+	#endif
+	*/
+
 	// ARM9 enters a wait loop
 	// copy ARM9 function to RAM, and make the ARM9 jump to it
 	copyLoop((void*)TEMP_MEM, (void*)startBinary_ARM9, startBinary_ARM9_size);

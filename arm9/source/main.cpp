@@ -25,10 +25,12 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include <nds/fifocommon.h>
+// #include <nds/fifocommon.h>
 
 #include "inifile.h"
 #include "nds_loader_arm9.h"
+#include "crc.h"
+#include "nds_card.h"
 
 #include "bios_decompress_callback.h"
 
@@ -96,6 +98,9 @@ int main( int argc, char **argv) {
 
 	defaultExceptionHandler();
 
+	u32 ndsHeader[0x80];
+	char gameid[4];
+
 	BootSplashInit();
 
 	if (fatInitDefault()) {
@@ -106,27 +111,52 @@ int main( int argc, char **argv) {
 		
 		std::string	ndsPath = NTRBootstrap.GetString( "NTR_BOOTSTRAP", "NDS", "");
 		
-		if(NTRBootstrap.GetInt("NTR_BOOTSTRAP","RESETSLOT1",0) == 0) {
-			fifoSendValue32(FIFO_USER_01, 1);
+		if(NTRBootstrap.GetInt("NTR_BOOTSTRAP","USESLOT1",0) == 0) {
+
+			for (int i = 0; i < 30; i++) { swiWaitForVBlank(); } 
+
 		} else {
+
 			if (REG_SCFG_MC == 0x11) {
 				do { CartridgePrompt(); }
 				while (REG_SCFG_MC == 0x11);
+				disableSlot1();
+				for (int i = 0; i < 25; i++) { swiWaitForVBlank(); }
+				enableSlot1();	
 			}
-			LoadScreen();
-			fifoSendValue32(FIFO_USER_02, 1);
-			fifoSendValue32(FIFO_USER_01, 1);
-			fifoWaitValue32(FIFO_USER_03);
-		}
-		
-		for (int i = 0; i < 60; i++) { swiWaitForVBlank(); }
-		
-		if(NTRBootstrap.GetInt("NTR_BOOTSTRAP","NTRTOUCH",0) == 0) { /* Do Nothing */ } else { fifoSendValue32(FIFO_USER_05, 1); }
-		
-		fifoSendValue32(FIFO_USER_04, 1);
-		
-		for (int i = 0; i < 60; i++) { swiWaitForVBlank(); }
 
+			if(NTRBootstrap.GetInt("NTR_BOOTSTRAP","RESETSLOT1",0) == 0) { 
+		
+				if(REG_SCFG_MC == 0x10) { 
+					disableSlot1();
+					for (int i = 0; i < 25; i++) { swiWaitForVBlank(); }
+					enableSlot1();
+				}
+
+			} else {
+			
+				disableSlot1();
+				for (int i = 0; i < 25; i++) { swiWaitForVBlank(); }
+				enableSlot1();
+			
+				if(NTRBootstrap.GetInt("NTR_BOOTSTRAP","CARDINIT",0) == 0) { /* Do Nothing */ } else {
+
+					sysSetCardOwner (BUS_OWNER_ARM9);
+					
+					getHeader (ndsHeader);
+				
+					for (int i = 0; i < 30; i++) { swiWaitForVBlank(); }
+
+					memcpy (gameid, ((const char*)ndsHeader) + 12, 4);
+					
+					for (int i = 0; i < 15; i++) { swiWaitForVBlank(); }
+
+					// REG_EXMEMCNT |= ARM7_OWNS_ROM | ARM7_OWNS_CARD;
+					// sysSetCardOwner (BUS_OWNER_ARM7);
+
+				}
+			}
+		}
 		runNdsFile(ndsPath.c_str(), 0, NULL);
 	} else {
 		// Display Error Screen

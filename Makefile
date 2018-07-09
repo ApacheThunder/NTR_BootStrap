@@ -123,7 +123,7 @@ $(TARGET).nds:	$(TARGET).arm7 $(TARGET).arm9
 	#ndstool	-c $(TARGET).nds -7 $(TARGET).arm7.elf -9 $(TARGET).arm9.elf -b icon.bmp "NTR BOOTSTRAP;Runs an .nds file in NTR mode;made by Apache Thunder"
 	ndstool	-c $(TARGET).nds -7 $(TARGET).arm7.elf -9 $(TARGET).arm9.elf \
 			-b $(CURDIR)/icon.bmp "NTR BOOTSTRAP;Runs an .nds file in NTR mode;made by Apache Thunder" \
-			-g KSTP 01 "NTRBOOTSTRAP" -z 80040000 -u 00030004
+			-g KSTP 01 "NTRBOOTSTRAP" -z 80040000 -u 00030004 -a 00000120 -p 0000
 
 $(TARGET).arm7: arm7/$(TARGET).elf
 	cp arm7/$(TARGET).elf $(TARGET).arm7.elf

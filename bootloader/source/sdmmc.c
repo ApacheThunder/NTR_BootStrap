@@ -48,13 +48,6 @@ void sdmmc_send_command(struct mmcdevice *ctx, uint32_t cmd, uint32_t args) {
     sdmmc_write16(REG_SDIRMASK1,0);
     sdmmc_write16(REG_SDSTATUS0,0);
     sdmmc_write16(REG_SDSTATUS1,0);
-#ifdef DATA32_SUPPORT
-//  if(readdata)sdmmc_mask16(REG_DATACTL32, 0x1000, 0x800);
-//  if(writedata)sdmmc_mask16(REG_DATACTL32, 0x800, 0x1000);
-//  sdmmc_mask16(REG_DATACTL32,0x1800,2);
-#else
-    sdmmc_mask16(REG_DATACTL32,0x1800,0);
-#endif
     sdmmc_write16(REG_SDCMDARG0,args &0xFFFF);
     sdmmc_write16(REG_SDCMDARG1,args >> 16);
     sdmmc_write16(REG_SDCMD,cmd &0xFFFF);
@@ -70,30 +63,22 @@ void sdmmc_send_command(struct mmcdevice *ctx, uint32_t cmd, uint32_t args) {
 
     while(1) {
         volatile uint16_t status1 = sdmmc_read16(REG_SDSTATUS1);
-#ifdef DATA32_SUPPORT
         volatile uint16_t ctl32 = sdmmc_read16(REG_SDDATACTL32);
         if((ctl32 & 0x100))
-#else
-        if((status1 & TMIO_STAT1_RXRDY))
-#endif
         {
             if(readdata) {
                 if(useBuf) {
                     sdmmc_mask16(REG_SDSTATUS1, TMIO_STAT1_RXRDY, 0);
                     if(size > 0x1FF) {
-#ifdef DATA32_SUPPORT
                         if(useBuf32) {
                             for(i = 0; i<0x200; i+=4) {
                                 *dataPtr32++ = sdmmc_read32(REG_SDFIFO32);
                             }
                         } else {
-#endif
                             for(i = 0; i<0x200; i+=2) {
                                 *dataPtr++ = sdmmc_read16(REG_SDFIFO);
                             }
-#ifdef DATA32_SUPPORT
                         }
-#endif
                         size -= 0x200;
                     }
                 }
@@ -101,33 +86,7 @@ void sdmmc_send_command(struct mmcdevice *ctx, uint32_t cmd, uint32_t args) {
                 sdmmc_mask16(REG_SDDATACTL32, 0x800, 0);
             }
         }
-#ifdef DATA32_SUPPORT
-        if(!(ctl32 & 0x200))
-#else
-        if((status1 & TMIO_STAT1_TXRQ))
-#endif
-        {
-            if(writedata) {
-                if(useBuf) {
-                    sdmmc_mask16(REG_SDSTATUS1, TMIO_STAT1_TXRQ, 0);
-                    //sdmmc_write16(REG_SDSTATUS1,~TMIO_STAT1_TXRQ);
-                    if(size > 0x1FF) {
-#ifdef DATA32_SUPPORT
-                        for(i = 0; i<0x200; i+=4) {
-                            sdmmc_write32(REG_SDFIFO32,*dataPtr32++);
-                        }
-#else
-                        for(i = 0; i<0x200; i+=2) {
-                            sdmmc_write16(REG_SDFIFO,*dataPtr++);
-                        }
-#endif
-                        size -= 0x200;
-                    }
-                }
 
-                sdmmc_mask16(REG_SDDATACTL32, 0x1000, 0);
-            }
-        }
         if(status1 & TMIO_MASK_GW) {
             ctx->error |= 4;
             break;
@@ -167,7 +126,7 @@ int sdmmc_cardinserted() {
 }
 
 //---------------------------------------------------------------------------------
-void sdmmc_controller_init() {
+void sdmmc_controller_init(bool force) {
 //---------------------------------------------------------------------------------
     deviceSD.isSDHC = 0;
     deviceSD.SDOPT = 0;
@@ -178,21 +137,11 @@ void sdmmc_controller_init() {
 
     *(vu16*)(SDMMC_BASE + REG_SDDATACTL32) &= 0xF7FFu;
     *(vu16*)(SDMMC_BASE + REG_SDDATACTL32) &= 0xEFFFu;
-#ifdef DATA32_SUPPORT
     *(vu16*)(SDMMC_BASE + REG_SDDATACTL32) |= 0x402u;
-#else
-    *(vu16*)(SDMMC_BASE + REG_SDDATACTL32) |= 0x402u;
-#endif
     *(vu16*)(SDMMC_BASE + REG_SDDATACTL) = (*(vu16*)(SDMMC_BASE + REG_SDDATACTL) & 0xFFDD) | 2;
-#ifdef DATA32_SUPPORT
     *(vu16*)(SDMMC_BASE + REG_SDDATACTL32) &= 0xFFFFu;
     *(vu16*)(SDMMC_BASE + REG_SDDATACTL) &= 0xFFDFu;
     *(vu16*)(SDMMC_BASE + REG_SDBLKLEN32) = 512;
-#else
-    *(vu16*)(SDMMC_BASE + REG_SDDATACTL32) &= 0xFFFDu;
-    *(vu16*)(SDMMC_BASE + REG_SDDATACTL) &= 0xFFDDu;
-    *(vu16*)(SDMMC_BASE + REG_SDBLKLEN32) = 0;
-#endif
     *(vu16*)(SDMMC_BASE + REG_SDBLKCOUNT32) = 1;
     *(vu16*)(SDMMC_BASE + REG_SDRESET) &= 0xFFFEu;
     *(vu16*)(SDMMC_BASE + REG_SDRESET) |= 1u;
@@ -201,46 +150,12 @@ void sdmmc_controller_init() {
     *(vu16*)(SDMMC_BASE + 0x0fc) |= 0xDBu; //SDCTL_RESERVED7
     *(vu16*)(SDMMC_BASE + 0x0fe) |= 0xDBu; //SDCTL_RESERVED8
     *(vu16*)(SDMMC_BASE + REG_SDPORTSEL) &= 0xFFFCu;
-#ifdef DATA32_SUPPORT
     *(vu16*)(SDMMC_BASE + REG_SDCLKCTL) = 0x20;
     *(vu16*)(SDMMC_BASE + REG_SDOPT) = 0x40EE;
-#else
-    *(vu16*)(SDMMC_BASE + REG_SDCLKCTL) = 0x40; //Nintendo sets this to 0x20
-    *(vu16*)(SDMMC_BASE + REG_SDOPT) = 0x40EB; //Nintendo sets this to 0x40EE
-#endif
     *(vu16*)(SDMMC_BASE + REG_SDPORTSEL) &= 0xFFFCu;
     *(vu16*)(SDMMC_BASE + REG_SDBLKLEN) = 512;
     *(vu16*)(SDMMC_BASE + REG_SDSTOP) = 0;
 
-    setTarget(&deviceSD);
-}
-
-//---------------------------------------------------------------------------------
-static u32 calcSDSize(u8* csd, int type) {
-//---------------------------------------------------------------------------------
-    u32 result = 0;
-    if (type == -1) type = csd[14] >> 6;
-    switch (type) {
-        case 0:
-            {
-                u32 block_len = csd[9] & 0xf;
-                block_len = 1 << block_len;
-                u32 mult = (csd[4] >> 7) | ((csd[5] & 3) << 1);
-                mult = 1 << (mult + 2);
-                result = csd[8] & 3;
-                result = (result << 8) | csd[7];
-                result = (result << 2) | (csd[6] >> 6);
-                result = (result + 1) * mult * block_len / 512;
-            }
-            break;
-        case 1:
-            result = csd[7] & 0x3f;
-            result = (result << 8) | csd[6];
-            result = (result << 8) | csd[5];
-            result = (result + 1) * 1024;
-            break;
-    }
-    return result;
 }
 
 //---------------------------------------------------------------------------------
@@ -277,11 +192,16 @@ int sdmmc_sdcard_init() {
     sdmmc_send_command(&deviceSD,0x10609,deviceSD.initarg << 0x10);
     if (deviceSD.error & 0x4) return -1;
 
-    deviceSD.total_size = calcSDSize((u8*)&deviceSD.ret[0],-1);
     deviceSD.clk = 1;
     setckl(1);
 
     sdmmc_send_command(&deviceSD,0x10507,deviceSD.initarg << 0x10);
+    if (deviceSD.error & 0x4) return -1;
+
+    sdmmc_send_command(&deviceSD,0x10437,deviceSD.initarg << 0x10);
+    if (deviceSD.error & 0x4) return -1;
+
+    sdmmc_send_command(&deviceSD,0x1076A,0x0);
     if (deviceSD.error & 0x4) return -1;
 
     sdmmc_send_command(&deviceSD,0x10437,deviceSD.initarg << 0x10);
@@ -310,10 +230,8 @@ int sdmmc_sdcard_readsectors(u32 sector_no, u32 numsectors, void *out) {
     setTarget(&deviceSD);
     sdmmc_write16(REG_SDSTOP,0x100);
 
-#ifdef DATA32_SUPPORT
     sdmmc_write16(REG_SDBLKCOUNT32,numsectors);
     sdmmc_write16(REG_SDBLKLEN32,0x200);
-#endif
 
     sdmmc_write16(REG_SDBLKCOUNT,numsectors);
     deviceSD.data = out;

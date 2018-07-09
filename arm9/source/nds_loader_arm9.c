@@ -132,7 +132,7 @@ int runNds (const void* loader, u32 loaderSize, u32 cluster, bool initDisc, int 
 	irqDisable(IRQ_ALL);
 
 	// Give the VRAM to the ARM7
-	VRAM_C_CR = VRAM_ENABLE | VRAM_C_ARM7_0x06000000;	
+	VRAM_C_CR = VRAM_ENABLE | VRAM_C_ARM7_0x06000000;
 	// Reset into a passme loop
 	REG_EXMEMCNT |= ARM7_OWNS_ROM | ARM7_OWNS_CARD;
 	

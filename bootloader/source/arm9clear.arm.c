@@ -13,22 +13,6 @@
 
 #include "boot.h"
 
-/*
-#ifdef NTRMODE
-void initMBKArm9() {
-	*((vu32*)REG_MBK1)=0x8D898581;
-	*((vu32*)REG_MBK2)=0x91898581;
-	*((vu32*)REG_MBK3)=0x91999591;
-	*((vu32*)REG_MBK4)=0x91898581;
-	*((vu32*)REG_MBK5)=0x91999591;
-	
-	REG_MBK6=0x00003000;
-	REG_MBK7=0x00003000;
-	REG_MBK8=0x00003000;
-}
-#endif
-*/
-
 /*-------------------------------------------------------------------------
 resetMemory2_ARM9
 Clears the ARM9's DMA channels and resets video memory
@@ -38,10 +22,6 @@ Modified by Chishm:
 --------------------------------------------------------------------------*/
 void __attribute__ ((long_call)) __attribute__((naked)) __attribute__((noreturn)) resetMemory2_ARM9 (void) 
 {
-
-// #ifdef NTRMODE
-	// initMBKArm9();
-// #endif
 
  	register int i;
   
@@ -91,6 +71,34 @@ void __attribute__ ((long_call)) __attribute__((naked)) __attribute__((noreturn)
 	);
 	while(1);
 }
+
+/*
+#ifdef NTRMODE
+void __attribute__ ((long_call)) __attribute__((naked)) __attribute__((noreturn)) initMBK_ARM9(void) 
+{
+	// Standard NTR Mode MBK setup
+	*((vu32*)REG_MBK1)=0x8D898581;
+	*((vu32*)REG_MBK2)=0x91898581;
+	*((vu32*)REG_MBK3)=0x91999591;
+	*((vu32*)REG_MBK4)=0x91898581;
+	*((vu32*)REG_MBK5)=0x91999591;
+
+	REG_MBK6=0x00003000;
+	REG_MBK7=0x00003000;
+	REG_MBK8=0x00003000;
+
+	// Return to passme loop
+	*((vu32*)0x02FFFE04) = (u32)0xE59FF018;		// ldr pc, 0x02FFFE24
+	*((vu32*)0x02FFFE24) = (u32)0x02FFFE04;		// Set ARM9 Loop address
+
+	asm volatile(
+		"\tbx %0\n"
+		: : "r" (0x02FFFE04)
+	);
+	while(1);
+}
+#endif
+*/
 
 /*-------------------------------------------------------------------------
 startBinary_ARM9
